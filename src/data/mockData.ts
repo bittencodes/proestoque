@@ -19,6 +19,7 @@ export type Produto = {
   preco: number;
   unidade: string;          // "un", "kg", "cx", "L"
   ultimaMovimentacao: string; // ISO date string
+  observacao?: string;
 };
 
 export type Movimentacao = {
