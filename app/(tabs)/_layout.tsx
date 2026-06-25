@@ -15,9 +15,14 @@ export default function TabsLayout() {
           height: 65,
           paddingBottom: 8,
         },
-        headerStyle: { backgroundColor: Colors.primary[600] },
+        
+        headerStyle: {
+          backgroundColor: Colors.primary[600],
+          height: 55, 
+        },
         headerTintColor: Colors.white,
         headerTitleStyle: { fontWeight: "bold" },
+        headerTitle: "",
       }}
     >
       <Tabs.Screen
@@ -36,8 +41,6 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="cube-outline" size={size} color={color} />
           ),
-          
-          headerTitle: "", 
         }}
       />
       <Tabs.Screen
