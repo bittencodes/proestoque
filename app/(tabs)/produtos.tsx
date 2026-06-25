@@ -1,3 +1,4 @@
+// BONUS: SectionList toggle with sticky headers
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
