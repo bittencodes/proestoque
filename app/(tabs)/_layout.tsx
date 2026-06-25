@@ -23,16 +23,27 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Home",
+          title: "Início",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="home-outline" size={size} color={color} />
           ),
         }}
       />
       <Tabs.Screen
+        name="produtos"
+        options={{
+          title: "Produtos",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="cube-outline" size={size} color={color} />
+          ),
+          
+          headerTitle: "", 
+        }}
+      />
+      <Tabs.Screen
         name="configuracoes"
         options={{
-          title: "Configurações",
+          title: "Config",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="settings-outline" size={size} color={color} />
           ),
