@@ -1,10 +1,12 @@
 import { router } from "expo-router";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import {
+  Alert,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -12,26 +14,29 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import LogoProEstoque from "../../src/components/LogoProEstoque";
 
 import Button from "../../src/components/Button";
 import Input from "../../src/components/Input";
+import LogoProEstoque from "../../src/components/LogoProEstoque";
 import { Colors, Spacing, Typography } from "../../src/constants/theme";
+import { useAuth } from "../../src/contexts/AuthContext";
 
 export default function Login() {
+  const { login, isLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const senhaRef = useRef<any>(null);
 
   const handleLogin = async () => {
-    setLoading(true);
-    // Simula chamada à API
-    setTimeout(() => {
-      setLoading(false);
-      router.replace("/(tabs)");
-    }, 1500);
+    if (!email.trim() || !senha.trim()) {
+      Alert.alert("Atenção", "Preencha e-mail e senha.");
+      return;
+    }
+
+    try {
+      await login(email, senha);
+    } catch (error) {
+      Alert.alert("Erro", "E-mail ou senha inválidos.");
+    }
   };
 
   return (
@@ -47,8 +52,7 @@ export default function Login() {
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            {/* Logo / Nome do App */}
-            <LogoProEstoque size="md" />
+            <LogoProEstoque size="md" showText={true} />
 
             <View style={styles.form}>
               <Input
@@ -60,17 +64,15 @@ export default function Login() {
                 autoCapitalize="none"
                 autoCorrect={false}
                 returnKeyType="next"
-                onSubmitEditing={() => senhaRef.current?.focus()}
                 placeholder="seu@email.com"
               />
 
               <Input
-                ref={senhaRef}
                 label="Senha"
                 value={senha}
                 onChangeText={setSenha}
-                leftIcon="lock-closed-outline"
                 isPassword
+                leftIcon="lock-closed-outline"
                 returnKeyType="done"
                 onSubmitEditing={handleLogin}
                 placeholder="••••••••"
@@ -86,7 +88,7 @@ export default function Login() {
               <Button
                 label="Entrar"
                 onPress={handleLogin}
-                loading={loading}
+                loading={isLoading}
                 fullWidth
                 style={{ marginTop: Spacing[2] }}
               />
@@ -105,19 +107,10 @@ export default function Login() {
   );
 }
 
-import { StatusBar } from "react-native";
-
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.background },
   flex: { flex: 1 },
   scroll: { flexGrow: 1, paddingHorizontal: 24, paddingVertical: 40 },
-  logoContainer: { alignItems: "center", marginBottom: 48, marginTop: 20 },
-  logoText: {
-    fontSize: Typography.fontSize["2xl"],
-    fontWeight: Typography.fontWeight.bold,
-    color: Colors.primary[600],
-    marginTop: Spacing[2],
-  },
   form: { flex: 1 },
   forgotLink: { alignSelf: "flex-end", marginBottom: Spacing[4] },
   linkText: {

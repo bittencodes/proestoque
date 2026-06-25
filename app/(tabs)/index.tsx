@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Colors, Radius, Spacing, Typography } from "../../src/constants/theme";
+import { useAuth } from "../../src/contexts/AuthContext";
 import {
   CATEGORIAS_MOCK,
   formatarPreco,
@@ -23,10 +24,14 @@ import {
 } from "../../src/data/mockData";
 
 export default function HomeScreen() {
+  const { user } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
 
   const alertas = useMemo(() => getProdutosComEstoqueBaixo(), []);
   const valorTotal = useMemo(() => getValorTotalEstoque(), []);
+
+  const hora = new Date().getHours();
+  const saudacao = hora < 12 ? "Bom dia" : hora < 18 ? "Boa tarde" : "Boa noite";
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -78,9 +83,18 @@ export default function HomeScreen() {
     return (
       <View style={styles.headerContainer}>
         <View style={styles.greetingRow}>
-          <View>
-            <Text style={styles.greeting}>Olá, Maísa 👋</Text>
-            <Text style={styles.dateText}>{dataHoje}</Text>
+          <View style={styles.greetingContent}>
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>
+                {user?.nome?.charAt(0).toUpperCase() ?? "?"}
+              </Text>
+            </View>
+            <View>
+              <Text style={styles.greeting}>
+                {saudacao}, {user?.nome?.split(" ")[0] ?? "Usuário"} 👋
+              </Text>
+              <Text style={styles.dateText}>{dataHoje}</Text>
+            </View>
           </View>
           <TouchableOpacity
             style={styles.addButton}
@@ -222,10 +236,33 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: Spacing[4],
   },
+  greetingContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing[3],
+  },
+  avatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: Colors.primary[600],
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  avatarText: {
+    fontSize: Typography.fontSize.lg,
+    fontWeight: Typography.fontWeight.bold,
+    color: Colors.white,
+  },
   greeting: {
     fontSize: Typography.fontSize.xl,
     fontWeight: Typography.fontWeight.bold,
     color: Colors.textPrimary,
+  },
+  subGreeting: {
+    fontSize: Typography.fontSize.sm,
+    color: Colors.textSecondary,
+    marginTop: Spacing[1],
   },
   dateText: {
     fontSize: Typography.fontSize.sm,
