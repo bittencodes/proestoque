@@ -1,3 +1,4 @@
+import { api } from "@/src/services/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 
@@ -14,6 +15,7 @@ type AuthContextType = {
   isAuthenticated: boolean;
   login: (email: string, senha: string) => Promise<void>;
   logout: () => Promise<void>;
+  registrar: (nome: string, email: string, senha: string) => Promise<void>; 
 };
 
 const STORAGE_KEYS = {
@@ -56,24 +58,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = useCallback(async (email: string, senha: string) => {
     setIsLoading(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      if (!email || !senha) throw new Error("Preencha todos os campos");
-
-      const tokenSimulado = "token_simulado_" + Date.now();
-      const userSimulado: User = {
-        id: "user_1",
-        nome: email.split("@")[0],
-        email,
-      };
+      const response = await api.post("/auth/login", { email, senha });
+      const { usuario, token } = response.data;
 
       await AsyncStorage.multiSet([
-        [STORAGE_KEYS.TOKEN, tokenSimulado],
-        [STORAGE_KEYS.USER, JSON.stringify(userSimulado)],
+        [STORAGE_KEYS.TOKEN, token],
+        [STORAGE_KEYS.USER, JSON.stringify(usuario)],
       ]);
 
-      setToken(tokenSimulado);
-      setUser(userSimulado);
+      setToken(token);
+      setUser(usuario);
+    } catch (error: any) {
+      const mensagem = error.response?.data?.erro ?? "Erro ao fazer login";
+      throw new Error(mensagem);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const registrar = useCallback(async (nome: string, email: string, senha: string) => {
+    setIsLoading(true);
+    try {
+      const response = await api.post("/auth/registro", { nome, email, senha });
+      const { usuario, token } = response.data;
+
+      await AsyncStorage.multiSet([
+        [STORAGE_KEYS.TOKEN, token],
+        [STORAGE_KEYS.USER, JSON.stringify(usuario)],
+      ]);
+
+      setToken(token);
+      setUser(usuario);
+    } catch (error: any) {
+      const mensagem = error.response?.data?.erro ?? "Erro ao criar conta";
+      throw new Error(mensagem);
     } finally {
       setIsLoading(false);
     }
@@ -94,6 +112,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isAuthenticated: !!token,
         login,
         logout,
+        registrar,
       }}
     >
       {children}

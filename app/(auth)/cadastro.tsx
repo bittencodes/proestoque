@@ -16,6 +16,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import LogoProEstoque from "../../src/components/LogoProEstoque";
 
+import { useAuth } from "@/src/contexts/AuthContext";
 import Button from "../../src/components/Button";
 import Input from "../../src/components/Input";
 import { Colors, Spacing, Typography } from "../../src/constants/theme";
@@ -80,16 +81,17 @@ export default function Cadastro() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleCadastro = () => {
-    if (!validate()) return;
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      Alert.alert("Conta criada!", "Bem-vindo ao ProEstoque.", [
-        { text: "OK", onPress: () => router.back() },
-      ]);
-    }, 2000);
-  };
+  const { registrar } = useAuth();
+
+const handleCadastro = async () => {
+  if (!validate()) return;
+  try {
+    await registrar(form.nome, form.email, form.senha);
+    // O NavigationGuard redireciona automaticamente para o dashboard
+  } catch (error: any) {
+    Alert.alert("Erro", error.message);
+  }
+};
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
