@@ -1,7 +1,7 @@
 import { Stack, useRouter, useSegments } from "expo-router";
-import { useEffect } from "react";
-import { ActivityIndicator, View } from "react-native";
-import { Colors } from "../src/constants/theme";
+import { useEffect, useState } from "react";
+
+import SplashScreen from "../src/components/SplashScreen";
 import { AuthProvider, useAuth } from "../src/contexts/AuthContext";
 
 function NavigationGuard() {
@@ -21,25 +21,33 @@ function NavigationGuard() {
     }
   }, [isAuthenticated, isLoading, segments]);
 
-  if (isLoading) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: Colors.background }}>
-        <ActivityIndicator size="large" color={Colors.primary[600]} />
-      </View>
-    );
-  }
-
   return null;
 }
 
 export default function RootLayout() {
+  const [minTimePassed, setMinTimePassed] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setMinTimePassed(true);
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <AuthProvider>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(tabs)" />
-      </Stack>
-      <NavigationGuard />
+      {!minTimePassed ? (
+        <SplashScreen />
+      ) : (
+        <>
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="(auth)" />
+            <Stack.Screen name="(tabs)" />
+          </Stack>
+          <NavigationGuard />
+        </>
+      )}
     </AuthProvider>
   );
 }
