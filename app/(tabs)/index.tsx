@@ -13,22 +13,26 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Colors, Radius, Spacing, Typography } from "../../src/constants/theme";
 import { useAuth } from "../../src/contexts/AuthContext";
+import { useProducts } from "../../src/contexts/ProductsContext";
 import {
   CATEGORIAS_MOCK,
   formatarPreco,
   getCategoriaPorId,
-  getProdutosComEstoqueBaixo,
-  getValorTotalEstoque,
-  PRODUTOS_MOCK,
-  type Produto,
 } from "../../src/data/mockData";
 
 export default function HomeScreen() {
   const { user } = useAuth();
+  const { produtos } = useProducts();
   const [refreshing, setRefreshing] = useState(false);
 
-  const alertas = useMemo(() => getProdutosComEstoqueBaixo(), []);
-  const valorTotal = useMemo(() => getValorTotalEstoque(), []);
+  const alertas = useMemo(
+    () => produtos.filter((p) => p.quantidade < p.quantidadeMinima),
+    [produtos]
+  );
+  const valorTotal = useMemo(
+    () => produtos.reduce((acc, p) => acc + p.quantidade * p.preco, 0),
+    [produtos]
+  );
 
   const hora = new Date().getHours();
   const saudacao = hora < 12 ? "Bom dia" : hora < 18 ? "Boa tarde" : "Boa noite";
@@ -42,7 +46,7 @@ export default function HomeScreen() {
     {
       id: "total",
       titulo: "Produtos",
-      valor: PRODUTOS_MOCK.length,
+      valor: produtos.length,
       icone: "cube-outline" as const,
       cor: Colors.primary[600],
       bg: Colors.primary[50],
@@ -96,12 +100,6 @@ export default function HomeScreen() {
               <Text style={styles.dateText}>{dataHoje}</Text>
             </View>
           </View>
-          <TouchableOpacity
-            style={styles.addButton}
-            onPress={() => router.push("/(tabs)/produtos")}
-          >
-            <Ionicons name="add" size={32} color={Colors.white} />
-          </TouchableOpacity>
         </View>
 
         <View style={styles.cardsGrid}>
@@ -128,7 +126,8 @@ export default function HomeScreen() {
               <View key={produto.id} style={styles.alertItem}>
                 <Text style={styles.alertItemName}>{produto.nome}</Text>
                 <Text style={styles.alertItemQty}>
-                  {produto.quantidade} / {produto.quantidadeMinima} {produto.unidade}
+                  {produto.quantidade} / {produto.quantidadeMinima}{" "}
+                  {produto.unidade}
                 </Text>
               </View>
             ))}
@@ -144,13 +143,13 @@ export default function HomeScreen() {
 
         <View style={styles.sectionTitleRow}>
           <Text style={styles.sectionTitle}>Produtos Recentes</Text>
-          <Text style={styles.sectionCount}>{PRODUTOS_MOCK.length} itens</Text>
+          <Text style={styles.sectionCount}>{produtos.length} itens</Text>
         </View>
       </View>
     );
   };
 
-  const renderProduto = ({ item }: { item: Produto }) => {
+  const renderProduto = ({ item }: { item: any }) => {
     const categoria = getCategoriaPorId(item.categoriaId);
     const emAlerta = item.quantidade < item.quantidadeMinima;
     const semEstoque = item.quantidade === 0;
@@ -170,7 +169,10 @@ export default function HomeScreen() {
     }
 
     return (
-      <TouchableOpacity style={styles.productItem}>
+      <TouchableOpacity
+        style={styles.productItem}
+        onPress={() => router.push(`/produtos/${item.id}`)}
+      >
         <View
           style={[
             styles.productIcon,
@@ -202,8 +204,8 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <FlatList<Produto>
-        data={PRODUTOS_MOCK}
+      <FlatList
+        data={produtos}
         keyExtractor={(item) => item.id}
         renderItem={renderProduto}
         ListHeaderComponent={DashboardHeader}
@@ -219,28 +221,16 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  listContent: {
-    paddingHorizontal: Spacing[4],
-    paddingBottom: Spacing[8],
-  },
-  headerContainer: {
-    paddingTop: Spacing[2],
-  },
+  safe: { flex: 1, backgroundColor: Colors.background },
+  listContent: { paddingHorizontal: Spacing[4], paddingBottom: Spacing[8] },
+  headerContainer: { paddingTop: Spacing[2] },
   greetingRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: Spacing[4],
   },
-  greetingContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing[3],
-  },
+  greetingContent: { flexDirection: "row", alignItems: "center", gap: Spacing[3] },
   avatar: {
     width: 44,
     height: 44,
@@ -264,24 +254,8 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     marginTop: Spacing[1],
   },
-  dateText: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.textSecondary,
-    marginTop: 2,
-  },
-  addButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: Colors.primary[600],
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: Colors.primary[600],
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 4,
-  },
+  dateText: { fontSize: Typography.fontSize.sm, color: Colors.textSecondary, marginTop: 2 },
+  // ✅ ESTILO DO BOTÃO REMOVIDO (não precisa mais do addButton)
   cardsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -299,9 +273,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-  cardIconContainer: {
-    marginBottom: Spacing[1],
-  },
+  cardIconContainer: { marginBottom: Spacing[1] },
   cardValue: {
     fontSize: Typography.fontSize.xl,
     fontWeight: Typography.fontWeight.bold,
@@ -320,34 +292,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.danger.border,
   },
-  alertHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing[2],
-    marginBottom: Spacing[2],
-  },
+  alertHeader: { flexDirection: "row", alignItems: "center", gap: Spacing[2], marginBottom: Spacing[2] },
   alertTitle: {
     fontSize: Typography.fontSize.sm,
     fontWeight: Typography.fontWeight.semibold,
     color: Colors.danger.text,
   },
-  alertItem: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: Spacing[1],
-  },
-  alertItemName: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.textPrimary,
-  },
-  alertItemQty: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.textSecondary,
-  },
-  alertSeeAllWrapper: {
-    alignItems: "flex-end",
-    marginTop: Spacing[1],
-  },
+  alertItem: { flexDirection: "row", justifyContent: "space-between", paddingVertical: Spacing[1] },
+  alertItemName: { fontSize: Typography.fontSize.sm, color: Colors.textPrimary },
+  alertItemQty: { fontSize: Typography.fontSize.sm, color: Colors.textSecondary },
+  alertSeeAllWrapper: { alignItems: "flex-end", marginTop: Spacing[1] },
   alertSeeAll: {
     fontSize: Typography.fontSize.sm,
     color: Colors.primary[600],
@@ -384,9 +338,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  productInfo: {
-    flex: 1,
-  },
+  productInfo: { flex: 1 },
   productName: {
     fontSize: Typography.fontSize.sm,
     fontWeight: Typography.fontWeight.medium,
@@ -397,16 +349,7 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     marginTop: 2,
   },
-  statusBadge: {
-    paddingHorizontal: Spacing[2],
-    paddingVertical: Spacing[1],
-    borderRadius: Radius.full,
-  },
-  statusText: {
-    fontSize: Typography.fontSize.xs,
-    fontWeight: Typography.fontWeight.medium,
-  },
-  separator: {
-    height: Spacing[2],
-  },
+  statusBadge: { paddingHorizontal: Spacing[2], paddingVertical: Spacing[1], borderRadius: Radius.full },
+  statusText: { fontSize: Typography.fontSize.xs, fontWeight: Typography.fontWeight.medium },
+  separator: { height: Spacing[2] },
 });
