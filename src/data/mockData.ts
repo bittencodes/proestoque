@@ -20,6 +20,7 @@ export type Produto = {
   unidade: string;          // "un", "kg", "cx", "L"
   ultimaMovimentacao: string; // ISO date string
   observacao?: string;
+  foto?: string;
 };
 
 export type Movimentacao = {
@@ -36,11 +37,11 @@ export type Movimentacao = {
 // ================================================================
 
 export const CATEGORIAS_MOCK: Categoria[] = [
-  { id: "cat_1", nome: "Bebidas",      icone: "cafe-outline",        cor: "#7c3aed" },
-  { id: "cat_2", nome: "Alimentos",    icone: "fast-food-outline",   cor: "#059669" },
-  { id: "cat_3", nome: "Limpeza",      icone: "sparkles-outline",    cor: "#0284c7" },
-  { id: "cat_4", nome: "Eletrônicos",  icone: "hardware-chip-outline",cor: "#d97706" },
-  { id: "cat_5", nome: "Papelaria",    icone: "document-outline",    cor: "#db2777" },
+  { id: "cat_1", nome: "Bebidas", icone: "cafe-outline", cor: "#7c3aed" },
+  { id: "cat_2", nome: "Alimentos", icone: "fast-food-outline", cor: "#059669" },
+  { id: "cat_3", nome: "Limpeza", icone: "sparkles-outline", cor: "#0284c7" },
+  { id: "cat_4", nome: "Eletrônicos", icone: "hardware-chip-outline", cor: "#d97706" },
+  { id: "cat_5", nome: "Papelaria", icone: "document-outline", cor: "#db2777" },
 ];
 
 export const PRODUTOS_MOCK: Produto[] = [
@@ -148,10 +149,10 @@ export const PRODUTOS_MOCK: Produto[] = [
 
 export const MOVIMENTACOES_MOCK: Movimentacao[] = [
   { id: "mov_1", produtoId: "prod_2", tipo: "entrada", quantidade: 24, data: "2024-11-13T14:20:00Z", observacao: "Reposição semanal" },
-  { id: "mov_2", produtoId: "prod_1", tipo: "saida",   quantidade: 6,  data: "2024-11-14T10:30:00Z" },
-  { id: "mov_3", produtoId: "prod_8", tipo: "saida",   quantidade: 4,  data: "2024-11-07T10:10:00Z", observacao: "Fim do estoque" },
+  { id: "mov_2", produtoId: "prod_1", tipo: "saida", quantidade: 6, data: "2024-11-14T10:30:00Z" },
+  { id: "mov_3", produtoId: "prod_8", tipo: "saida", quantidade: 4, data: "2024-11-07T10:10:00Z", observacao: "Fim do estoque" },
   { id: "mov_4", produtoId: "prod_4", tipo: "entrada", quantidade: 10, data: "2024-11-11T16:45:00Z" },
-  { id: "mov_5", produtoId: "prod_5", tipo: "saida",   quantidade: 5,  data: "2024-11-10T11:00:00Z" },
+  { id: "mov_5", produtoId: "prod_5", tipo: "saida", quantidade: 5, data: "2024-11-10T11:00:00Z" },
 ];
 
 // ================================================================

@@ -25,6 +25,9 @@ export const produtoSchema = z.object({
   unidade: z.enum(["un", "kg", "cx", "L", "m"]),
 
   observacao: z.string().max(200, { message: "Máximo 200 caracteres" }).optional(),
+
+  foto: z.string().url().optional().or(z.literal("")),
+
 });
 
 export type ProdutoFormData = z.infer<typeof produtoSchema>;

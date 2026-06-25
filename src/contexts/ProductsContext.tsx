@@ -89,6 +89,7 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
         id: "prod_" + Date.now(),
         ultimaMovimentacao: new Date().toISOString(),
         observacao: data.observacao ?? "", 
+        foto: data.foto ?? "",
       };
       dispatch({ type: "ADD", payload: novoProduto });
       await persistir([novoProduto, ...state.produtos]);
@@ -103,6 +104,7 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
         id,
         ultimaMovimentacao: new Date().toISOString(),
         observacao: data.observacao ?? "", 
+        foto: data.foto ?? "",
       };
       dispatch({ type: "UPDATE", payload: produtoAtualizado });
       await persistir(

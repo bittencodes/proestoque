@@ -1,4 +1,5 @@
 import Button from "@/src/components/Button";
+import ImagePickerField from "@/src/components/ImagePickerField";
 import Input from "@/src/components/Input";
 import { Colors, Radius, Spacing, Typography } from "@/src/constants/theme";
 import { useProducts } from "@/src/contexts/ProductsContext";
@@ -36,6 +37,7 @@ export default function NovoProduto() {
       preco: undefined,
       unidade: "un",
       observacao: "",
+      foto: " ",
     },
   });
 
@@ -182,7 +184,7 @@ export default function NovoProduto() {
                 if (parts.length > 2) return;
                 setPrecoText(cleaned);
               }}
-              onBlur={() => {               
+              onBlur={() => {
                 const normalized = precoText.replace(",", ".");
                 if (normalized === "" || normalized === ".") {
                   onChange(undefined);
@@ -254,6 +256,18 @@ export default function NovoProduto() {
             error={errors.observacao?.message}
             returnKeyType="done"
             onSubmitEditing={handleSubmit(onSubmit)}
+          />
+        )}
+      />
+
+      <Controller
+        control={control}
+        name="foto"
+        render={({ field: { value, onChange } }) => (
+          <ImagePickerField
+            value={value ?? null}
+            onChange={(uri) => onChange(uri ?? undefined)}
+            label="Foto do produto"
           />
         )}
       />

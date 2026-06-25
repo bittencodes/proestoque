@@ -1,4 +1,5 @@
 import Button from "@/src/components/Button";
+import ImagePickerField from "@/src/components/ImagePickerField";
 import Input from "@/src/components/Input";
 import { Colors, Radius, Spacing, Typography } from "@/src/constants/theme";
 import { useProducts } from "@/src/contexts/ProductsContext";
@@ -39,6 +40,7 @@ export default function EditarProduto() {
       preco: undefined,
       unidade: "un",
       observacao: "",
+      foto: " ",
     },
   });
 
@@ -55,8 +57,9 @@ export default function EditarProduto() {
           preco: produto.preco,
           unidade: produto.unidade as ProdutoFormData["unidade"],
           observacao: produto.observacao ?? "",
+          foto: produto.foto?? "",
         });
-        
+
         setPrecoText(String(produto.preco).replace(".", ","));
       }
     }
@@ -204,7 +207,7 @@ export default function EditarProduto() {
         )}
       />
 
-      
+
       <Controller
         control={control}
         name="preco"
@@ -303,6 +306,18 @@ export default function EditarProduto() {
             error={errors.observacao?.message}
             returnKeyType="done"
             onSubmitEditing={handleSubmit(onSubmit)}
+          />
+        )}
+      />
+
+      <Controller
+        control={control}
+        name="foto"
+        render={({ field: { value, onChange } }) => (
+          <ImagePickerField
+            value={value ?? null}
+            onChange={(uri) => onChange(uri ?? undefined)}
+            label="Foto do produto"
           />
         )}
       />

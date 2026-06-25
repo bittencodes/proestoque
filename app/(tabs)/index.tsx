@@ -3,6 +3,7 @@ import { router } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import {
   FlatList,
+  Image,
   RefreshControl,
   StyleSheet,
   Text,
@@ -173,18 +174,13 @@ export default function HomeScreen() {
         style={styles.productItem}
         onPress={() => router.push(`/produtos/${item.id}`)}
       >
-        <View
-          style={[
-            styles.productIcon,
-            { backgroundColor: categoria?.cor || Colors.neutral[200] },
-          ]}
-        >
-          <Ionicons
-            name={(categoria?.icone as any) || "cube-outline"}
-            size={18}
-            color={Colors.white}
-          />
-        </View>
+        {item.foto ? (
+          <Image source={{ uri: item.foto }} style={styles.productImage} />
+        ) : (
+          <View style={[styles.productIcon, { backgroundColor: categoria?.cor || Colors.neutral[200] }]}>
+            <Ionicons name={(categoria?.icone as any) || "cube-outline"} size={18} color={Colors.white} />
+          </View>
+        )}
 
         <View style={styles.productInfo}>
           <Text style={styles.productName}>{item.nome}</Text>
@@ -255,7 +251,6 @@ const styles = StyleSheet.create({
     marginTop: Spacing[1],
   },
   dateText: { fontSize: Typography.fontSize.sm, color: Colors.textSecondary, marginTop: 2 },
-  // ✅ ESTILO DO BOTÃO REMOVIDO (não precisa mais do addButton)
   cardsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -352,4 +347,10 @@ const styles = StyleSheet.create({
   statusBadge: { paddingHorizontal: Spacing[2], paddingVertical: Spacing[1], borderRadius: Radius.full },
   statusText: { fontSize: Typography.fontSize.xs, fontWeight: Typography.fontWeight.medium },
   separator: { height: Spacing[2] },
+  productImage: {
+    width: 36,
+    height: 36,
+    borderRadius: Radius.md,
+
+  },
 });

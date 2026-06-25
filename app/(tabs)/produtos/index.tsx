@@ -6,13 +6,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { router, useNavigation } from "expo-router";
 import { useLayoutEffect, useMemo, useState } from "react";
 import {
-  FlatList,
-  ScrollView,
+  FlatList, Image, ScrollView,
   SectionList,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -76,9 +75,25 @@ export default function ListaProdutos() {
 
     return (
       <TouchableOpacity
-        style={styles.item}
+        style={styles.productItem}
         onPress={() => router.push(`/produtos/${item.id}`)}
       >
+        {item.foto ? (
+          <Image source={{ uri: item.foto }} style={styles.productImage} />
+        ) : (
+          <View
+            style={[
+              styles.productIcon,
+              { backgroundColor: categoria?.cor || Colors.neutral[200] },
+            ]}
+          >
+            <Ionicons
+              name={(categoria?.icone as any) || "cube-outline"}
+              size={18}
+              color={Colors.white}
+            />
+          </View>
+        )}
         <View style={styles.itemInfo}>
           <Text style={styles.itemNome}>{item.nome}</Text>
           <Text style={styles.itemQtd}>
@@ -201,16 +216,6 @@ const styles = StyleSheet.create({
     fontWeight: Typography.fontWeight.medium,
   },
   chipTextoAtivo: { color: Colors.white },
-  item: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: Spacing[3],
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.lg,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
   itemInfo: { flex: 1 },
   itemNome: {
     fontSize: Typography.fontSize.md,
@@ -255,5 +260,26 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.2,
     shadowRadius: 6,
+  },
+  productImage: {
+    width: 36,
+    height: 36,
+    borderRadius: Radius.md,
+    
+  },
+  productIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: Radius.md,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  productItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.lg,
+    padding: Spacing[3],
+    gap: Spacing[3],
   },
 });
