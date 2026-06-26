@@ -3,7 +3,7 @@ import ImagePickerField from "@/src/components/ImagePickerField";
 import Input from "@/src/components/Input";
 import { Colors, Radius, Spacing, Typography } from "@/src/constants/theme";
 import { useProducts } from "@/src/contexts/ProductsContext";
-import { CATEGORIAS_MOCK } from "@/src/data/mockData";
+import { useCategorias } from "@/src/hooks/useCategorias";
 import { produtoSchema, type ProdutoFormData } from "@/src/schemas/produtoSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { router } from "expo-router";
@@ -21,6 +21,7 @@ import {
 
 export default function NovoProduto() {
   const { adicionarProduto } = useProducts();
+  const { categorias } = useCategorias();
   const [precoText, setPrecoText] = useState("");
 
   const {
@@ -37,7 +38,7 @@ export default function NovoProduto() {
       preco: undefined,
       unidade: "un",
       observacao: "",
-      foto: " ",
+      foto: "",
     },
   });
 
@@ -45,8 +46,8 @@ export default function NovoProduto() {
     try {
       await adicionarProduto(data);
       router.back();
-    } catch (error) {
-      Alert.alert("Erro", "Não foi possível cadastrar o produto.");
+    } catch (error: any) {
+      Alert.alert("Erro", error.message || "Não foi possível cadastrar o produto.");
     }
   };
 
@@ -56,6 +57,21 @@ export default function NovoProduto() {
       contentContainerStyle={styles.container}
       keyboardShouldPersistTaps="handled"
     >
+      
+      <View style={styles.fotoContainer}>
+        <Controller
+          control={control}
+          name="foto"
+          render={({ field: { value, onChange } }) => (
+            <ImagePickerField
+              value={value ?? null}
+              onChange={(uri) => onChange(uri ?? "")}
+              label="Foto do produto"
+            />
+          )}
+        />
+      </View>
+
       <Controller
         control={control}
         name="nome"
@@ -83,7 +99,7 @@ export default function NovoProduto() {
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.chipsContainer}
             >
-              {CATEGORIAS_MOCK.map((cat) => (
+              {categorias.map((cat) => (
                 <TouchableOpacity
                   key={cat.id}
                   style={[
@@ -177,9 +193,7 @@ export default function NovoProduto() {
               label="Preço (R$) *"
               value={precoText}
               onChangeText={(text) => {
-                // Permite apenas números, vírgula e ponto
                 const cleaned = text.replace(/[^0-9,.]/g, "");
-                // Impede múltiplas vírgulas/pontos
                 const parts = cleaned.split(/[,.]/);
                 if (parts.length > 2) return;
                 setPrecoText(cleaned);
@@ -260,18 +274,6 @@ export default function NovoProduto() {
         )}
       />
 
-      <Controller
-        control={control}
-        name="foto"
-        render={({ field: { value, onChange } }) => (
-          <ImagePickerField
-            value={value ?? null}
-            onChange={(uri) => onChange(uri ?? undefined)}
-            label="Foto do produto"
-          />
-        )}
-      />
-
       <Button
         label="Cadastrar produto"
         onPress={handleSubmit(onSubmit)}
@@ -285,7 +287,11 @@ export default function NovoProduto() {
 
 const styles = StyleSheet.create({
   scroll: { flex: 1, backgroundColor: Colors.background },
-  container: { padding: Spacing[6], paddingBottom: Spacing[10] },
+  container: { paddingHorizontal: Spacing[6], paddingTop: Spacing[2], paddingBottom: Spacing[10] },
+  fotoContainer: {
+    alignItems: "center",
+    marginBottom: Spacing[4],
+  },
   label: {
     fontSize: 14,
     fontWeight: "600",

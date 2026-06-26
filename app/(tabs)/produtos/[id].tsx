@@ -3,7 +3,7 @@ import ImagePickerField from "@/src/components/ImagePickerField";
 import Input from "@/src/components/Input";
 import { Colors, Radius, Spacing, Typography } from "@/src/constants/theme";
 import { useProducts } from "@/src/contexts/ProductsContext";
-import { CATEGORIAS_MOCK } from "@/src/data/mockData";
+import { useCategorias } from "@/src/hooks/useCategorias";
 import { produtoSchema, type ProdutoFormData } from "@/src/schemas/produtoSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { router, useLocalSearchParams } from "expo-router";
@@ -22,13 +22,13 @@ import {
 export default function EditarProduto() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { getProdutoById, editarProduto, deletarProduto } = useProducts();
+  const { categorias } = useCategorias();
   const [precoText, setPrecoText] = useState("");
 
   const {
     control,
     handleSubmit,
     reset,
-    setValue,
     formState: { errors, isSubmitting },
   } = useForm<ProdutoFormData>({
     resolver: zodResolver(produtoSchema),
@@ -40,11 +40,10 @@ export default function EditarProduto() {
       preco: undefined,
       unidade: "un",
       observacao: "",
-      foto: " ",
+      foto: "",
     },
   });
 
-  // Carrega os dados do produto para edição
   useEffect(() => {
     if (id) {
       const produto = getProdutoById(id);
@@ -57,9 +56,8 @@ export default function EditarProduto() {
           preco: produto.preco,
           unidade: produto.unidade as ProdutoFormData["unidade"],
           observacao: produto.observacao ?? "",
-          foto: produto.foto?? "",
+          foto: produto.foto ?? "",
         });
-
         setPrecoText(String(produto.preco).replace(".", ","));
       }
     }
@@ -68,9 +66,9 @@ export default function EditarProduto() {
   const onSubmit = async (data: ProdutoFormData) => {
     try {
       if (id) await editarProduto(id, data);
-      router.back();
-    } catch (error) {
-      Alert.alert("Erro", "Não foi possível salvar as alterações.");
+      router.replace("/produtos");
+    } catch (error: any) {
+      Alert.alert("Erro", error.message || "Não foi possível salvar as alterações.");
     }
   };
 
@@ -87,8 +85,8 @@ export default function EditarProduto() {
             try {
               if (id) await deletarProduto(id);
               router.back();
-            } catch (error) {
-              Alert.alert("Erro", "Não foi possível excluir o produto.");
+            } catch (error: any) {
+              Alert.alert("Erro ao excluir", error.message);
             }
           },
         },
@@ -102,6 +100,20 @@ export default function EditarProduto() {
       contentContainerStyle={styles.container}
       keyboardShouldPersistTaps="handled"
     >
+      <View style={styles.fotoContainer}>
+        <Controller
+          control={control}
+          name="foto"
+          render={({ field: { value, onChange } }) => (
+            <ImagePickerField
+              value={value ?? null}
+              onChange={(uri) => onChange(uri ?? "")}
+              label="Foto do produto"
+            />
+          )}
+        />
+      </View>
+
       <Controller
         control={control}
         name="nome"
@@ -129,7 +141,7 @@ export default function EditarProduto() {
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.chipsContainer}
             >
-              {CATEGORIAS_MOCK.map((cat) => (
+              {categorias.map((cat) => (
                 <TouchableOpacity
                   key={cat.id}
                   style={[
@@ -207,7 +219,6 @@ export default function EditarProduto() {
         )}
       />
 
-
       <Controller
         control={control}
         name="preco"
@@ -216,7 +227,6 @@ export default function EditarProduto() {
             label="Preço (R$) *"
             value={precoText}
             onChangeText={(text) => {
-              // Permite apenas números, vírgula e ponto
               const cleaned = text.replace(/[^0-9,.]/g, "");
               const parts = cleaned.split(/[,.]/);
               if (parts.length > 2) return;
@@ -235,7 +245,6 @@ export default function EditarProduto() {
               }
             }}
             onBlur={() => {
-              // Garantia extra no blur
               const normalized = precoText.replace(",", ".");
               if (normalized === "" || normalized === ".") {
                 onChange(undefined);
@@ -310,18 +319,6 @@ export default function EditarProduto() {
         )}
       />
 
-      <Controller
-        control={control}
-        name="foto"
-        render={({ field: { value, onChange } }) => (
-          <ImagePickerField
-            value={value ?? null}
-            onChange={(uri) => onChange(uri ?? undefined)}
-            label="Foto do produto"
-          />
-        )}
-      />
-
       <Button
         label="Salvar alterações"
         onPress={handleSubmit(onSubmit)}
@@ -344,6 +341,10 @@ export default function EditarProduto() {
 const styles = StyleSheet.create({
   scroll: { flex: 1, backgroundColor: Colors.background },
   container: { padding: Spacing[6], paddingBottom: Spacing[10] },
+  fotoContainer: {
+    alignItems: "center",
+    marginBottom: Spacing[4],
+  },
   label: {
     fontSize: 14,
     fontWeight: "600",

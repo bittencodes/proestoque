@@ -1,25 +1,33 @@
+import { ErrorView } from "@/src/components/ErrorView";
 import Input from "@/src/components/Input";
+import { LoadingView } from "@/src/components/LoadingView";
 import { Colors, Radius, Spacing, Typography } from "@/src/constants/theme";
 import { useProducts } from "@/src/contexts/ProductsContext";
-import { CATEGORIAS_MOCK, getCategoriaPorId } from "@/src/data/mockData";
+import { getCategoriaPorId } from "@/src/data/mockData"; // ainda usamos a função auxiliar
+import { useCategorias } from "@/src/hooks/useCategorias";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useNavigation } from "expo-router";
 import { useLayoutEffect, useMemo, useState } from "react";
 import {
-  FlatList, Image, ScrollView,
+  FlatList,
+  Image,
+  RefreshControl,
+  ScrollView,
   SectionList,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ListaProdutos() {
-  const { produtos } = useProducts();
+  const { produtos, isLoading, error, carregarProdutos } = useProducts();
+  const { categorias } = useCategorias();
   const [busca, setBusca] = useState("");
   const [categoriaAtiva, setCategoriaAtiva] = useState<string | null>(null);
   const [modoAgrupado, setModoAgrupado] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const navigation = useNavigation();
 
   const produtosFiltrados = useMemo(() => {
@@ -31,11 +39,13 @@ export default function ListaProdutos() {
   }, [produtos, busca, categoriaAtiva]);
 
   const secoes = useMemo(() => {
-    return CATEGORIAS_MOCK.map((cat) => ({
-      title: cat.nome,
-      data: produtosFiltrados.filter((p) => p.categoriaId === cat.id),
-    })).filter((sec) => sec.data.length > 0);
-  }, [produtosFiltrados]);
+    return categorias
+      .map((cat) => ({
+        title: cat.nome,
+        data: produtosFiltrados.filter((p) => p.categoriaId === cat.id),
+      }))
+      .filter((sec) => sec.data.length > 0);
+  }, [produtosFiltrados, categorias]);
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -126,27 +136,29 @@ export default function ListaProdutos() {
         autoCapitalize="none"
         autoCorrect={false}
       />
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsContainer}>
-        <TouchableOpacity
-          style={[styles.chip, categoriaAtiva === null && styles.chipAtivo]}
-          onPress={() => setCategoriaAtiva(null)}
-        >
-          <Text style={[styles.chipText, categoriaAtiva === null && styles.chipTextoAtivo]}>
-            Todos
-          </Text>
-        </TouchableOpacity>
-        {CATEGORIAS_MOCK.map((cat) => (
+      {!modoAgrupado && (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsContainer}>
           <TouchableOpacity
-            key={cat.id}
-            style={[styles.chip, categoriaAtiva === cat.id && styles.chipAtivo]}
-            onPress={() => setCategoriaAtiva(categoriaAtiva === cat.id ? null : cat.id)}
+            style={[styles.chip, categoriaAtiva === null && styles.chipAtivo]}
+            onPress={() => setCategoriaAtiva(null)}
           >
-            <Text style={[styles.chipText, categoriaAtiva === cat.id && styles.chipTextoAtivo]}>
-              {cat.nome}
+            <Text style={[styles.chipText, categoriaAtiva === null && styles.chipTextoAtivo]}>
+              Todos
             </Text>
           </TouchableOpacity>
-        ))}
-      </ScrollView>
+          {categorias.map((cat) => (
+            <TouchableOpacity
+              key={cat.id}
+              style={[styles.chip, categoriaAtiva === cat.id && styles.chipAtivo]}
+              onPress={() => setCategoriaAtiva(categoriaAtiva === cat.id ? null : cat.id)}
+            >
+              <Text style={[styles.chipText, categoriaAtiva === cat.id && styles.chipTextoAtivo]}>
+                {cat.nome}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      )}
     </View>
   );
 
@@ -168,6 +180,22 @@ export default function ListaProdutos() {
     showsVerticalScrollIndicator: false,
   };
 
+  // Pull-to-refresh
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await carregarProdutos();
+    setRefreshing(false);
+  };
+
+  // Estados de UI
+  if (isLoading && produtos.length === 0) {
+    return <LoadingView mensagem="Carregando produtos..." />;
+  }
+
+  if (error && produtos.length === 0) {
+    return <ErrorView mensagem={error} onRetry={carregarProdutos} />;
+  }
+
   return (
     <SafeAreaView style={styles.safe} edges={["bottom"]}>
       {!modoAgrupado ? (
@@ -176,6 +204,9 @@ export default function ListaProdutos() {
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
           {...commonProps}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary[600]} />
+          }
         />
       ) : (
         <SectionList
@@ -185,6 +216,9 @@ export default function ListaProdutos() {
           renderSectionHeader={renderSectionHeader}
           stickySectionHeadersEnabled
           {...commonProps}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary[600]} />
+          }
         />
       )}
 
@@ -197,6 +231,8 @@ export default function ListaProdutos() {
     </SafeAreaView>
   );
 }
+
+
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.background },

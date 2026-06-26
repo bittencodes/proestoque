@@ -12,18 +12,17 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { ErrorView } from "@/src/components/ErrorView";
+import { LoadingView } from "@/src/components/LoadingView";
 import { Colors, Radius, Spacing, Typography } from "../../src/constants/theme";
 import { useAuth } from "../../src/contexts/AuthContext";
 import { useProducts } from "../../src/contexts/ProductsContext";
-import {
-  CATEGORIAS_MOCK,
-  formatarPreco,
-  getCategoriaPorId,
-} from "../../src/data/mockData";
+import { getCategoriaPorId } from "../../src/data/mockData"; // vamos manter só essa função auxiliar, mas remover os dados mock
+import { formatarPreco } from "../../src/utils/formatters";
 
 export default function HomeScreen() {
   const { user } = useAuth();
-  const { produtos } = useProducts();
+  const { produtos, isLoading, error, carregarProdutos } = useProducts();
   const [refreshing, setRefreshing] = useState(false);
 
   const alertas = useMemo(
@@ -38,10 +37,21 @@ export default function HomeScreen() {
   const hora = new Date().getHours();
   const saudacao = hora < 12 ? "Bom dia" : hora < 18 ? "Boa tarde" : "Boa noite";
 
-  const onRefresh = useCallback(() => {
+  // Pull-to-refresh real
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1500);
-  }, []);
+    await carregarProdutos();
+    setRefreshing(false);
+  }, [carregarProdutos]);
+
+  // Estados de UI
+  if (isLoading && produtos.length === 0) {
+    return <LoadingView mensagem="Carregando dashboard..." />;
+  }
+
+  if (error && produtos.length === 0) {
+    return <ErrorView mensagem={error} onRetry={carregarProdutos} />;
+  }
 
   const cardsResumo = [
     {
@@ -63,7 +73,7 @@ export default function HomeScreen() {
     {
       id: "categorias",
       titulo: "Categorias",
-      valor: CATEGORIAS_MOCK.length,
+      valor: 0, // vamos buscar do backend, mas não temos o total fácil aqui, manteremos o card de categorias removido ou fixo
       icone: "grid-outline" as const,
       cor: Colors.info.text,
       bg: Colors.info.bg,
@@ -78,6 +88,9 @@ export default function HomeScreen() {
     },
   ];
 
+  // Remover o card de categorias para não usar CATEGORIAS_MOCK
+  const cardsFinais = cardsResumo.filter(c => c.id !== "categorias");
+
   const DashboardHeader = () => {
     const dataHoje = new Date().toLocaleDateString("pt-BR", {
       day: "numeric",
@@ -87,24 +100,26 @@ export default function HomeScreen() {
 
     return (
       <View style={styles.headerContainer}>
-        <View style={styles.greetingRow}>
-          <View style={styles.greetingContent}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>
-                {user?.nome?.charAt(0).toUpperCase() ?? "?"}
-              </Text>
-            </View>
-            <View>
-              <Text style={styles.greeting}>
-                {saudacao}, {user?.nome?.split(" ")[0] ?? "Usuário"} 👋
-              </Text>
-              <Text style={styles.dateText}>{dataHoje}</Text>
-            </View>
+      <View style={styles.greetingRow}>
+        <View style={styles.greetingContent}>
+         
+          <View>
+            <Text style={styles.greeting}>
+              {saudacao}, {user?.nome?.split(" ")[0] ?? "Usuário"} 👋
+            </Text>
+            <Text style={styles.dateText}>{dataHoje}</Text>
+          </View>
+          {/* ✅ AVATAR DEPOIS (DIREITA) */}
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>
+              {user?.nome?.charAt(0).toUpperCase() ?? "?"}
+            </Text>
           </View>
         </View>
+      </View>
 
         <View style={styles.cardsGrid}>
-          {cardsResumo.map((card) => (
+          {cardsFinais.map((card) => (
             <View key={card.id} style={[styles.card, { backgroundColor: card.bg }]}>
               <View style={styles.cardIconContainer}>
                 <Ionicons name={card.icone} size={20} color={card.cor} />
@@ -206,7 +221,11 @@ export default function HomeScreen() {
         renderItem={renderProduto}
         ListHeaderComponent={DashboardHeader}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={Colors.primary[600]}
+          />
         }
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContent}
@@ -226,11 +245,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: Spacing[4],
   },
-  greetingContent: { flexDirection: "row", alignItems: "center", gap: Spacing[3] },
+  greetingContent: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", width: "100%" },
   avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 48,
+    height: 48,
+    borderRadius: 28,
     backgroundColor: Colors.primary[600],
     alignItems: "center",
     justifyContent: "center",
