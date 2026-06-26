@@ -16,6 +16,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import LogoProEstoque from "../../src/components/LogoProEstoque";
 
+//Authcontext
 import { useAuth } from "@/src/contexts/AuthContext";
 import Button from "../../src/components/Button";
 import Input from "../../src/components/Input";
