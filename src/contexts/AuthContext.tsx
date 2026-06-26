@@ -1,6 +1,7 @@
 import { api } from "@/src/services/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
+const [refreshToken, setRefreshToken] = useState<string | null>(null);
 
 type User = {
   id: string;
@@ -11,6 +12,7 @@ type User = {
 type AuthContextType = {
   user: User | null;
   token: string | null;
+  refreshToken: string | null;
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (email: string, senha: string) => Promise<void>;
@@ -21,6 +23,7 @@ type AuthContextType = {
 const STORAGE_KEYS = {
   TOKEN: "@proestoque:token",
   USER: "@proestoque:user",
+  REFRESH_TOKEN: "@proestoque:refreshToken",
 } as const;
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -36,6 +39,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const [tokenSalvo, userString] = await AsyncStorage.multiGet([
           STORAGE_KEYS.TOKEN,
           STORAGE_KEYS.USER,
+          STORAGE_KEYS.REFRESH_TOKEN,
         ]);
 
         const token = tokenSalvo[1];
@@ -64,6 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await AsyncStorage.multiSet([
         [STORAGE_KEYS.TOKEN, token],
         [STORAGE_KEYS.USER, JSON.stringify(usuario)],
+          [STORAGE_KEYS.REFRESH_TOKEN, refreshToken ?? ""],
       ]);
 
       setToken(token);
@@ -85,6 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await AsyncStorage.multiSet([
         [STORAGE_KEYS.TOKEN, token],
         [STORAGE_KEYS.USER, JSON.stringify(usuario)],
+        [STORAGE_KEYS.REFRESH_TOKEN, refreshToken ?? ""],
       ]);
 
       setToken(token);
@@ -98,7 +104,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
-    await AsyncStorage.multiRemove([STORAGE_KEYS.TOKEN, STORAGE_KEYS.USER]);
+    await AsyncStorage.multiRemove([STORAGE_KEYS.TOKEN, STORAGE_KEYS.USER,STORAGE_KEYS.REFRESH_TOKEN,]);
     setToken(null);
     setUser(null);
   }, []);
@@ -108,6 +114,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       value={{
         user,
         token,
+        refreshToken,
         isLoading,
         isAuthenticated: !!token,
         login,
